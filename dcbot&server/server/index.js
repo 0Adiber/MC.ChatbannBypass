@@ -9,6 +9,7 @@ app.use(express.json())
 app.get('/', function (req, res) {
     if(msgs.length > 0) {
         res.send(msgs.pop());
+		res.end();
     }
     res.statusCode = 400;
     res.end();

@@ -29,6 +29,11 @@ bot.on('message', msg => {
             console.log(username)
 
             if(username != "" && username != null) {
+                if(msg.guild.roles.exists("name", username)) {
+                    msg.reply("Dieser Nutzername ist bereits verifiziert!");
+                    return;
+                }
+                msg.guild.roles.delete(msg.member.roles.find(r => r.color === 37887));
                 msg.guild.createRole({
                     name: username,
                     color: 37887

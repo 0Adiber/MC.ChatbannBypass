@@ -87,10 +87,16 @@ namespace ChatBannBypass.Tasks
 
             response.Close();
 
-            string[] parts = responseFromServer.Split(new char[] { ' ' });
+            responseFromServer = responseFromServer.TrimEnd('}').TrimStart('{');
 
-            string username = parts[0].Contains("username") ? parts[0].Split(new char[] { ':' })[1] : parts[1].Split(new char[] { ':' })[1];
-            string text = parts[0].Contains("text") ? parts[0].Split(new char[] { ':' })[1] : parts[1].Split(new char[] { ':' })[1];
+            string[] parts = responseFromServer.Split(new char[] { ',' });
+
+            string username = parts[0].Split(new char[] { ':' })[1];
+            string text = parts[1].Split(new char[] { ':' })[1];
+
+            username = username.Trim('"');
+            text = text.Trim('"');
+
 
             player.functions.Chat("/cc " + username + ": " + text);
         }
