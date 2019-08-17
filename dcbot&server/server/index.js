@@ -10,10 +10,11 @@ app.use(express.json())
 app.get('/', function (req, res) {
     if(msgs.length > 0) {
         res.send(msgs.pop());
-		res.end();
+        res.end();
+    } else {
+        res.statusCode = 400;
+        res.end();
     }
-    res.statusCode = 400;
-    res.end();
 });
   
 // POST method route
@@ -52,17 +53,21 @@ let chat = []
 *   { "username": username, "text": message text}
 */
 app.post('/chat', function(req, res) {
-    if(chat.length > 0) {
-        chat.push(req.body);
-        res.statusCode = 200;
-        res.end();
-    }
-    res.statusCode = 400;
+    chat.push(req.body);
+    res.statusCode = 200;
     res.end();
 });
 
 app.get('/chat', function(req, res){
-    res.send(chat.pop());
+    if(chat.length > 0) {
+        res.send(chat.pop());
+        res.statusCode = 200;
+        res.end();
+    } else {
+        res.statusCode = 400;
+        res.send(JSON.stringify({}))
+        res.end();
+    }
 });
 
 //bot first connection

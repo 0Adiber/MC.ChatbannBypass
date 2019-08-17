@@ -5,27 +5,33 @@ const fetch = require('node-fetch');
 
 bot.on('ready', () => {
   console.log(`Logged in as ${bot.user.tag}!`);
+  //interval to get clan msgs
+    const chat = setInterval(async () => {
+        fetch(config.server + "/chat", {
+            method: "GET",
+            headers: { 'Content-Type': 'application/json'}
+        })
+        .then(response => response.json())
+        .then(res => {
+            if(res.text === undefined) {
+                return;
+            }
+            let username = res.username;
+            let text = res.text.replace(/&%'/g, '"');
+
+            bot.channels.get(config.channel).fetchWebhooks().then(hooks => hooks.find(r => r.name === username))
+            .then(async(hook) => {
+                if(!hook) {
+                    let uuid = await getUUID(username);
+                    hook = bot.channels.get(config.channel).createWebhook(username, "https://mc-heads.net/avatar/"+ uuid).then(h => h.send(text));
+                    return;
+                }
+                hook.send(text);
+            })
+        })
+        .catch(err => {});
+    }, 50);
 });
-
-//interval to get clan msgs
-const chat = setInterval(function() {
-    fetch(config.server + "/chat", {
-        method: "GET",
-        headers: { 'Content-Type': 'application/json'}
-    })
-    .then(response => response.json())
-    .then(res => {
-        let username = res.username;
-        let text = res.text.replace(/&%'/g, '"');
-
-        let hook = bot.channels.get(config.channel).fetchWebhooks().find(r => r.name === username);
-        if(!hook) {
-            hook = bot.channels.get(config.channel).createWebhook(username);
-        }
-        hook.send(text);
-    })
-    .catch(err => console.log(err));
-}, 50);
 
 bot.on('message', msg => {
   if (!msg.author.bot) {
@@ -57,11 +63,12 @@ bot.on('message', msg => {
                 msg.guild.createRole({
                     name: username,
                     color: 37887
-                }).then(function() {
+                }).then(async() => {
                     msg.member.addRole(msg.guild.roles.find(r => r.name === username));
                     msg.member.addRole(msg.guild.roles.find(r => r.name === "verified"));
                     if(bot.channels.get(config.channel).fetchWebhooks().exists("name", username)) {
-                        hook = bot.channels.get(config.channel).createWebhook(username);
+                        let uuid = await getUUID(username);
+                        hook = bot.channels.get(config.channel).createWebhook(username, "https://mc-heads.net/avatar/"+uuid);
                     }
                     msg.reply("Erfolgreich verifiziert!");
                 });
@@ -84,7 +91,22 @@ bot.on('message', msg => {
         return;
     }
 
-    console.log(msg.member.roles.find(r => r.color === 37887).name + ": " + msg.toString());
+    let username = msg.member.roles.find(r => r.color === 37887).name;
+    let text = msg.toString();
+
+    console.log(username + ": " + msg.toString());
+
+    msg.delete();
+
+    bot.channels.get(config.channel).fetchWebhooks().then(hooks => hooks.find(r => r.name === username))
+            .then(async(hook) => {
+                if(!hook) {
+                    let uuid = await getUUID(username);
+                    hook = bot.channels.get(config.channel).createWebhook(username, "https://mc-heads.net/avatar/"+ uuid).then(h => h.send(text));
+                    return;
+                }
+                hook.send(text);
+            })
 
     fetch(config.server, {
         method: "POST",
@@ -93,9 +115,15 @@ bot.on('message', msg => {
             username: msg.member.roles.find(r => r.color === 37887).name,
             text: msg.toString().replace(/"/g, "&%'")
         })
-    });
-    msg.delete();
+    }).catch(err => msg.reply("Der API Server ist nicht erreichbar"));
   }
 });
 
 bot.login(config.token);
+
+function getUUID(name) {
+    return fetch("https://mc-heads.net/minecraft/profile/" + name, {
+        method: "GET",
+    }).then(response => response.json())
+    .then(res => res.id);
+}
