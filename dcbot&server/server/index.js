@@ -2,6 +2,7 @@ var express = require('express');
 var app = express();
 
 let msgs = [];
+let online = false;
 
 app.use(express.json())
 
@@ -44,6 +45,16 @@ app.post('/auth', function(req, res) {
     res.end();
 });
 
+
+//bot first connection
+app.post('/start', function(req, res) {
+   msgs = [];
+   online = true;
+});
+
+app.get('/start', function(req, res){
+    res.send(online);
+});
 
 app.listen(61111, function() {
     console.log("listening on port 61111");

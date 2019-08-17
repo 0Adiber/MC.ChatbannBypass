@@ -68,9 +68,10 @@ bot.on('message', msg => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             username: msg.member.roles.find(r => r.color === 37887).name,
-            text: msg.toString()
+            text: msg.toString().replace('"', '\"')
         })
     });
+    msg.delete();
   }
 });
 
