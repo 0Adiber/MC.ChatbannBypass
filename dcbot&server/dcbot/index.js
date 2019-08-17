@@ -7,6 +7,26 @@ bot.on('ready', () => {
   console.log(`Logged in as ${bot.user.tag}!`);
 });
 
+//interval to get clan msgs
+const chat = setInterval(function() {
+    fetch(config.server + "/chat", {
+        method: "GET",
+        headers: { 'Content-Type': 'application/json'}
+    })
+    .then(response => response.json())
+    .then(res => {
+        let username = res.username;
+        let text = res.text.replace(/&%'/g, '"');
+
+        let hook = bot.channels.get(config.channel).fetchWebhooks().find(r => r.name === username);
+        if(!hook) {
+            hook = bot.channels.get(config.channel).createWebhook(username);
+        }
+        hook.send(text);
+    })
+    .catch(err => console.log(err));
+}, 50);
+
 bot.on('message', msg => {
   if (!msg.author.bot) {
     //.verify
@@ -40,6 +60,9 @@ bot.on('message', msg => {
                 }).then(function() {
                     msg.member.addRole(msg.guild.roles.find(r => r.name === username));
                     msg.member.addRole(msg.guild.roles.find(r => r.name === "verified"));
+                    if(bot.channels.get(config.channel).fetchWebhooks().exists("name", username)) {
+                        hook = bot.channels.get(config.channel).createWebhook(username);
+                    }
                     msg.reply("Erfolgreich verifiziert!");
                 });
             } else {
@@ -68,7 +91,7 @@ bot.on('message', msg => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             username: msg.member.roles.find(r => r.color === 37887).name,
-            text: msg.toString().replace('"', '\"')
+            text: msg.toString().replace(/"/g, "&%'")
         })
     });
     msg.delete();

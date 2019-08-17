@@ -25,8 +25,21 @@ namespace ChatBannBypass.Tasks
         {
             return true;
         }
-        public override void Start() { player.events.onChat += OnChat; player.events.onTick += OnTick; }
+        public override void Start() { player.events.onChat += OnChat; player.events.onTick += OnTick; StartUp(); }
         public override void Stop() { player.events.onChat -= OnChat; player.events.onTick -= OnTick; }
+
+        private void StartUp()
+        {
+            var request = (HttpWebRequest)WebRequest.Create(server + "/start");
+            request.Method = "POST";
+            request.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36";
+            request.ContentType = "application/json";
+            request.Credentials = CredentialCache.DefaultCredentials;
+            ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
+
+            var response = (HttpWebResponse)request.GetResponse();
+            response.Close();
+        }
 
         private void OnChat(IPlayer player, IChat message, byte position)
         {
@@ -36,7 +49,31 @@ namespace ChatBannBypass.Tasks
                 if (!msg.Contains(":")) return;
                 msg = msg.Replace("[Clans]", "");
                 string[] parts = msg.Trim().Split(new char[] { ':' });
-                if (!parts[1].Trim().Equals(".auth")) return;
+                if (!parts[1].Trim().Equals(".auth"))
+                {
+                    string username = parts[0].Trim();
+                    string text = parts[1].Replace("\"", "&%'");
+
+                    var req = (HttpWebRequest)WebRequest.Create(server + "/chat");
+                    req.Method = "POST";
+                    req.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36";
+                    req.ContentType = "application/json";
+                    req.Credentials = CredentialCache.DefaultCredentials;
+                    ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
+
+                    using (var streamWriter = new StreamWriter(req.GetRequestStream()))
+                    {
+                        string json = "{\"username\":\"" + username + "\"," +
+                                      "\"text\":\"" + text + "\"}";
+
+                        streamWriter.Write(json);
+                    }
+
+                    var res = (HttpWebResponse)req.GetResponse();
+                    res.Close();
+
+                    return;
+                }
 
                 string token = RandomString(11, false);
 
@@ -89,13 +126,13 @@ namespace ChatBannBypass.Tasks
 
             responseFromServer = responseFromServer.TrimEnd('}').TrimStart('{');
 
-            string[] parts = responseFromServer.Split(new char[] { ',' });
+            string[] parts = responseFromServer.Split(new char[] { ',' }, 2);
 
             string username = parts[0].Split(new char[] { ':' })[1];
             string text = parts[1].Split(new char[] { ':' })[1];
 
             username = username.Trim('"');
-            text = text.Trim('"');
+            text = text.Trim('"').Replace("&%'", "\"");
 
 
             player.functions.Chat("/cc " + username + ": " + text);

@@ -45,15 +45,29 @@ app.post('/auth', function(req, res) {
     res.end();
 });
 
+let chat = []
+
+//every message from clan
+/*
+*   { "username": username, "text": message text}
+*/
+app.post('/chat', function(req, res) {
+    if(chat.length > 0) {
+        chat.push(req.body);
+        res.statusCode = 200;
+        res.end();
+    }
+    res.statusCode = 400;
+    res.end();
+});
+
+app.get('/chat', function(req, res){
+    res.send(chat.pop());
+});
 
 //bot first connection
 app.post('/start', function(req, res) {
    msgs = [];
-   online = true;
-});
-
-app.get('/start', function(req, res){
-    res.send(online);
 });
 
 app.listen(61111, function() {
