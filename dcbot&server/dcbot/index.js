@@ -56,9 +56,8 @@ bot.on('message', msg => {
         .then(response => response.json())
         .then(res => username = res.name)
         .then(function() {
-            console.log(username)
 
-            if(username != "" && username != null) {
+            if(username != "" && username != null && username != undefined) {
                 if(msg.guild.roles.exists("name", username)) {
                     msg.reply("Dieser Nutzername ist bereits verifiziert!");
                     return;
@@ -99,11 +98,13 @@ bot.on('message', msg => {
 
         let specMaxLength = 100 - 3 - username.length - 2;
 
-        if(msg.toString.length > specMaxLength) {
+        if(text.length > specMaxLength) {
             msg.reply("Deine Nachricht darf nicht länger als " + specMaxLength + " Zeichen sein!");
             return;
         }
 
+		console.log(username + ": " + text);
+		
         // create webhook
         getUUID(username)
         .then(uuid => bot.channels.get(config.syncChannel).createWebhook(username, "https://mc-heads.net/avatar/"+ uuid)
@@ -118,7 +119,7 @@ bot.on('message', msg => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 username: msg.member.roles.find(r => r.color === 37887).name,
-                text: msg.toString().replace(/"/g, "&%'")
+                text: text.replace(/"/g, "&%'")
             })
         }).catch(err => msg.reply("Der API Server ist nicht erreichbar"));
 
