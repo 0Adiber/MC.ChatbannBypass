@@ -18,6 +18,7 @@ namespace ChatBannBypass
         {
             // Should be used to define all the settings.
             this.Setting.Add(new StringSetting("Server", "The Server for the Communication", "localhost:61111"));
+            this.Setting.Add(new StringSetting("No Synchronise", "Not synchronised with DC Server", "MeineTochter"));
         }
 
         public override PluginResponse OnEnable(IBotSettings botSettings)
@@ -39,7 +40,7 @@ namespace ChatBannBypass
             // This should be used to register the tasks for the bot, see below.
             // (Note: called after 'OnEnable')
             RegisterTask(new Fetch(
-                Setting.At(0).Get<string>()
+                Setting.At(0).Get<string>(), Setting.At(1).Get<string>().Split(new char[] { ',' })
                 ));
         }
 

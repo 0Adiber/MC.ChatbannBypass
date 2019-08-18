@@ -14,20 +14,21 @@ bot.on('ready', () => {
         .then(response => response.json())
         .then(res => {
             if(res.text === undefined) {
+                if(res.stop) {
+                    bot.channels.get(config.syncChannel).send(res.stop);
+                }
                 return;
             }
             let username = res.username;
             let text = res.text.replace(/&%'/g, '"');
 
-            bot.channels.get(config.channel).fetchWebhooks().then(hooks => hooks.find(r => r.name === username))
-            .then(async(hook) => {
-                if(!hook) {
-                    let uuid = await getUUID(username);
-                    hook = bot.channels.get(config.channel).createWebhook(username, "https://mc-heads.net/avatar/"+ uuid).then(h => h.send(text));
-                    return;
-                }
-                hook.send(text);
-            })
+            getUUID(username)
+            .then(uuid => bot.channels.get(config.syncChannel).createWebhook(username, "https://mc-heads.net/avatar/"+ uuid)
+                .then(h => {
+                    h.send(text)
+                    return h;
+                })
+                .then(h => h.delete()));
         })
         .catch(err => {});
     }, 50);
@@ -36,8 +37,11 @@ bot.on('ready', () => {
 bot.on('message', msg => {
   if (!msg.author.bot) {
     //.verify
-    if(msg.toString().startsWith(".verify")) {
-
+    if(msg.channel.id == config.verifyChannel) {
+        if(!msg.toString().startsWith(".verify")) {
+            msg.delete();
+            return;
+        }
         parts = msg.toString().split(" ");
         console.log(msg.author.username + " : " + parts[1]);
 
@@ -50,7 +54,7 @@ bot.on('message', msg => {
             })
         })
         .then(response => response.json())
-        .then(res => username = res)
+        .then(res => username = res.name)
         .then(function() {
             console.log(username)
 
@@ -66,10 +70,6 @@ bot.on('message', msg => {
                 }).then(async() => {
                     msg.member.addRole(msg.guild.roles.find(r => r.name === username));
                     msg.member.addRole(msg.guild.roles.find(r => r.name === "verified"));
-                    if(bot.channels.get(config.channel).fetchWebhooks().exists("name", username)) {
-                        let uuid = await getUUID(username);
-                        hook = bot.channels.get(config.channel).createWebhook(username, "https://mc-heads.net/avatar/"+uuid);
-                    }
                     msg.reply("Erfolgreich verifiziert!");
                 });
             } else {
@@ -79,43 +79,51 @@ bot.on('message', msg => {
         .catch(err => console.error(err));
 
         return;
-    }
-    //if not .verify
-    if(!msg.member.roles.find(r => r.name === "verified")) {
-        msg.reply("Du musst dich zuerst verifizieren mit '.verify <token>', den token bekommst du in mc mit '.auth'");
-        return;
-    }
+    } else if(msg.channel.id == config.syncChannel) {
+        //if not .verify
+        if(!msg.member.roles.find(r => r.name === "verified")) {
+            msg.reply("Du musst dich zuerst verifizieren!");
+            return;
+        }
 
-    if(msg.toString.length > 90) {
-        msg.reply("Die Nachricht darf nicht länger als 90 Zeichen sein!");
-        return;
-    }
+        //get username
+        let username;
+        try {
+            username = msg.member.roles.find(r => r.color === 37887).name;
+        }catch(e) {
+            console.error(e);
+            return;
+        }
+        //get message
+        let text = msg.toString();
 
-    let username = msg.member.roles.find(r => r.color === 37887).name;
-    let text = msg.toString();
+        let specMaxLength = 100 - 3 - username.length - 2;
 
-    console.log(username + ": " + msg.toString());
+        if(msg.toString.length > specMaxLength) {
+            msg.reply("Deine Nachricht darf nicht länger als " + specMaxLength + " Zeichen sein!");
+            return;
+        }
 
-    msg.delete();
-
-    bot.channels.get(config.channel).fetchWebhooks().then(hooks => hooks.find(r => r.name === username))
-            .then(async(hook) => {
-                if(!hook) {
-                    let uuid = await getUUID(username);
-                    hook = bot.channels.get(config.channel).createWebhook(username, "https://mc-heads.net/avatar/"+ uuid).then(h => h.send(text));
-                    return;
-                }
-                hook.send(text);
+        // create webhook
+        getUUID(username)
+        .then(uuid => bot.channels.get(config.syncChannel).createWebhook(username, "https://mc-heads.net/avatar/"+ uuid)
+            .then(h => {
+                h.send(text)
+                return h;
             })
+            .then(h => h.delete()));
+        
+        fetch(config.server, {
+            method: "POST",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username: msg.member.roles.find(r => r.color === 37887).name,
+                text: msg.toString().replace(/"/g, "&%'")
+            })
+        }).catch(err => msg.reply("Der API Server ist nicht erreichbar"));
 
-    fetch(config.server, {
-        method: "POST",
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            username: msg.member.roles.find(r => r.color === 37887).name,
-            text: msg.toString().replace(/"/g, "&%'")
-        })
-    }).catch(err => msg.reply("Der API Server ist nicht erreichbar"));
+        msg.delete();
+    }
   }
 });
 

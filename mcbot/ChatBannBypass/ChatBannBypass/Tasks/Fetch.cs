@@ -15,10 +15,12 @@ namespace ChatBannBypass.Tasks
     class Fetch : ITask
     {
         private readonly string server;
+        private readonly string[] not_sync;
 
-        public Fetch(string server)
+        public Fetch(string server, string[] not_sync)
         {
             this.server = server.Contains("http://")?server:"http://"+server;
+            this.not_sync = not_sync;
         }
 
         public override bool Exec()
@@ -26,11 +28,24 @@ namespace ChatBannBypass.Tasks
             return true;
         }
         public override void Start() { player.events.onChat += OnChat; player.events.onTick += OnTick; StartUp(); }
-        public override void Stop() { player.events.onChat -= OnChat; player.events.onTick -= OnTick; }
+        public override void Stop() { player.events.onChat -= OnChat; player.events.onTick -= OnTick; StopCon(); }
 
         private void StartUp()
         {
             var request = (HttpWebRequest)WebRequest.Create(server + "/start");
+            request.Method = "POST";
+            request.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36";
+            request.ContentType = "application/json";
+            request.Credentials = CredentialCache.DefaultCredentials;
+            ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
+
+            var response = (HttpWebResponse)request.GetResponse();
+            response.Close();
+        }
+
+        private void StopCon()
+        {
+            var request = (HttpWebRequest)WebRequest.Create(server + "/stop");
             request.Method = "POST";
             request.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36";
             request.ContentType = "application/json";
@@ -48,10 +63,16 @@ namespace ChatBannBypass.Tasks
             {
                 if (!msg.Contains(":")) return;
                 msg = msg.Replace("[Clans]", "");
-                string[] parts = msg.Trim().Split(new char[] { ':' });
+                string[] parts = msg.Trim().Split(new char[] { ':' }, 2);
                 if (!parts[1].Trim().Equals(".auth"))
                 {
                     string username = parts[0].Trim();
+
+                    if (not_sync.Contains(username))
+                    {
+                        return;
+                    }
+
                     string text = parts[1].Replace("\"", "&%'");
 
                     var req = (HttpWebRequest)WebRequest.Create(server + "/chat");
@@ -71,7 +92,6 @@ namespace ChatBannBypass.Tasks
 
                     var res = (HttpWebResponse)req.GetResponse();
                     res.Close();
-
                     return;
                 }
 

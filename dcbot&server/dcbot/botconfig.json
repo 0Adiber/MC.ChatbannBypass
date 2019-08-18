@@ -1,5 +1,6 @@
 {
-    "token": "NjExMTI2MTQzODY4ODYyNDc1.XVPSHg.xTHRvTea_FJDwPO_5G_In5CWRlo",
+    "token": "NjEyNjU2NDUyOTEzNTk0Mzc4.XVljoA.jXopyjG-NXZ3MJCWWSPfeY1i4ZU",
 	"server": "http://localhost:61111",
-	"channel": "611135930300104720"
+	"syncChannel": "612653577252372483",
+	"verifyChannel": "612643595253448704"
 }
