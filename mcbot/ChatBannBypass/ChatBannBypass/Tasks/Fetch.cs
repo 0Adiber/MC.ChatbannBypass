@@ -148,8 +148,8 @@ namespace ChatBannBypass.Tasks
 
             string[] parts = responseFromServer.Split(new char[] { ',' }, 2);
 
-            string username = parts[0].Split(new char[] { ':' })[1];
-            string text = parts[1].Split(new char[] { ':' })[1];
+            string username = parts[0].Split(new char[] { ':' }, 2)[1];
+            string text = parts[1].Split(new char[] { ':' }, 2)[1];
 
             username = username.Trim('"');
             text = text.Trim('"').Replace("&%'", "\"");
