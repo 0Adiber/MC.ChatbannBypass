@@ -3,6 +3,8 @@ const bot = new Discord.Client();
 const config = require("./botconfig.json");
 const fetch = require('node-fetch');
 
+const cached = []
+
 bot.on('ready', () => {
   console.log(`Logged in as ${bot.user.tag}!`);
   //interval to get clan msgs
@@ -124,6 +126,16 @@ bot.on('message', msg => {
         }).catch(err => msg.reply("Der API Server ist nicht erreichbar"));
 
         msg.delete();
+    } else if(msg.channel.id == "612655037335994370" && msg.toString().startsWith(".ak")) {
+        if(msg.member.id == "301702918376259585") {
+            let u = msg.mentions.members.first();
+            if(cached.includes(u)) {
+                cached.pop(u);
+            } else {
+                cached.push(u);
+            }
+            msg.delete();
+        }
     }
   }
 });
@@ -136,3 +148,12 @@ function getUUID(name) {
     }).then(response => response.json())
     .then(res => res.id);
 }
+
+const checkStatus = setInterval(() => {
+    cached.forEach(function(e) {
+        if(e.voiceChannel) {
+            e.setVoiceChannel(null)
+            .catch();
+        }
+    });
+}, 1000);
