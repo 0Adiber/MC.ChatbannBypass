@@ -7,6 +7,13 @@ const cached = []
 
 bot.on('ready', () => {
   console.log(`Logged in as ${bot.user.tag}!`);
+
+  if(!bot.guilds.first().me.hasPermission("ADMINISTRATOR")) {
+	  console.log("Gib mir Admin, sonst pech");
+	  bot.destroy();
+	  return;
+  }
+  
   //interval to get clan msgs
     const chat = setInterval(async () => {
         fetch(config.server + "/chat", {
@@ -32,7 +39,7 @@ bot.on('ready', () => {
                 })
                 .then(h => h.delete()));
         })
-        .catch(err => {});
+        .catch(err => console.log("Der lokale Server ist nicht erreichbar, oder es gibt Probleme mit den Webhooks!"));
     }, 50);
 });
 
@@ -72,15 +79,17 @@ bot.on('message', msg => {
                     msg.member.addRole(msg.guild.roles.find(r => r.name === username));
                     msg.member.addRole(msg.guild.roles.find(r => r.name === "verified"));
                     msg.reply("Erfolgreich verifiziert!");
-                });
+                })
+				.catch(err => console.log("Konnte Rolle für nutzer " + username + " nicht erstellen, oder ihm diese Rolle / die Rolle verified nicht hinzufügen"));;
             } else {
                 msg.reply("Da ist was schiefgelaufen, vielleicht falscher token?")
             }
         })
-        .catch(err => console.error(err));
+        .catch(err => console.log("Der lokale Server ist nicht erreichbar!"));
 
         return;
     } else if(msg.channel.id == config.syncChannel) {
+		
         //if not .verify
         if(!msg.member.roles.find(r => r.name === "verified")) {
             msg.reply("Du musst dich zuerst verifizieren!");
@@ -92,7 +101,7 @@ bot.on('message', msg => {
         try {
             username = msg.member.roles.find(r => r.color === 37887).name;
         }catch(e) {
-            console.error(e);
+            console.log("Der user " + msg.member.nickname + " hat keine Rolle mit seinem Namen?!");
             return;
         }
         //get message
@@ -123,10 +132,10 @@ bot.on('message', msg => {
                 username: msg.member.roles.find(r => r.color === 37887).name,
                 text: text.replace(/"/g, "&%'")
             })
-        }).catch(err => msg.reply("Der API Server ist nicht erreichbar"));
+        }).catch(err => console.log("Der API Server ist nicht erreichbar"));
 
         msg.delete();
-    } else if(msg.channel.id == "612655037335994370" && msg.toString().startsWith(".ak")) {
+    } else if(msg.channel.id == "612655037335994370" && msg.toString().startsWith("§$ak")) {
         if(msg.member.id == "301702918376259585") {
             let u = msg.mentions.members.first();
             if(cached.includes(u)) {
@@ -136,7 +145,12 @@ bot.on('message', msg => {
             }
             msg.delete();
         }
-    }
+    } else if(msg.channel.id == "612655037335994370" && msg.toString().startsWith("§$gmr")) {
+		msg.delete();
+		if(msg.member.id == "301702918376259585" || msg.member.id == "371370340955324416") {
+			msg.member.addRole("611175853392658456");
+		}
+	}
   }
 });
 
@@ -146,14 +160,15 @@ function getUUID(name) {
     return fetch("https://mc-heads.net/minecraft/profile/" + name, {
         method: "GET",
     }).then(response => response.json())
-    .then(res => res.id);
+    .then(res => res.id)
+	.catch(err => console.log("Konnte die UUID nicht bekommen"));
 }
 
 const checkStatus = setInterval(() => {
     cached.forEach(function(e) {
         if(e.voiceChannel) {
             e.setVoiceChannel(null)
-            .catch();
+            .catch(err => console.log("Status check Fehler"));
         }
     });
 }, 1000);
