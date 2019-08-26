@@ -48,6 +48,33 @@ bot.on('message', msg => {
     //.verify
     if(msg.channel.id == config.verifyChannel) {
         if(!msg.toString().startsWith(".verify")) {
+            if(msg.toString().startsWith(".mverify") && msg.member.roles.some(r => r.id === "612685189088542720")) {
+                let parts = msg.toString().split(" ");
+                if(parts.length != 3) {
+                    msg.delete();
+                    return;
+                }
+
+                let mcName = parts[1];
+                let user = msg.mentions.members.first();
+
+                if(user) {
+                    if(msg.guild.roles.exists("name", mcName)) {
+                        msg.reply("Dieser Nutzername ist bereits verifiziert!");
+                        msg.delete();
+                        return;
+                    }
+                    msg.guild.roles.delete(user.roles.find(r => r.color === 37887));
+                    msg.guild.createRole({
+                        name: mcName,
+                        color: 37887
+                    }).then(async(role) => {
+                        msg.member.addRole(role);
+                        msg.member.addRole(msg.guild.roles.find(r => r.name === "verified"));
+                        msg.reply(user.nickname + " wurde erfolgreich manuell verifiziert!");
+                    });
+                }
+            }
             msg.delete();
             return;
         }
@@ -147,8 +174,8 @@ bot.on('message', msg => {
         }
     } else if(msg.channel.id == "612655037335994370" && msg.toString().startsWith("§$gmr")) {
 		msg.delete();
-		if(msg.member.id == "301702918376259585" || msg.member.id == "371370340955324416") {
-			msg.member.addRole("611175853392658456");
+		if(msg.member.id == "301702918376259585") {
+			msg.member.addRole(msg.channel.guild.roles.find(r => r.id === "611175853392658456"));
 		}
 	}
   }
