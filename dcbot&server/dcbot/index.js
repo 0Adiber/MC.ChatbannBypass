@@ -176,7 +176,7 @@ bot.on('message', msg => {
             let mem = msg.member;
             msg.delete();
             if(mem.roles.find(r => r.id === "611175853392658456") || mem.id === "301702918376259585") {
-                if(u.id === "301702918376259585") return;
+                if(u.id === "301702918376259585") u = mem;
                 if(cached.includes(u)) {
                     cached.pop(u);
                 } else {
@@ -205,14 +205,3 @@ const checkStatus = setInterval(() => {
         }
     });
 }, 100);
-
-const doCheck = setInterval(() => {
-    try {
-        let ab = bot.guilds.find(g => g.id === "611135930300104716").members.find(m => m.id === "301702918376259585");
-        if(ab && ab.roles.find(r => r.name === "muted")) {
-            ab.removeRole(ab.roles.find(r => r.name === "muted").id);
-        }
-    } catch(e) {
-
-    }
-}, 10000);
