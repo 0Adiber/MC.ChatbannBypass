@@ -102,7 +102,7 @@ bot.on('message', msg => {
             .then(res => username = res.name)
             .then(function() {
 
-                if(username != "" && username != null && username != undefined) {
+                if(username) {
                     if(msg.guild.roles.exists("name", username)) {
                         msg.reply("Dieser Nutzername ist bereits verifiziert!");
                         return;
@@ -126,8 +126,15 @@ bot.on('message', msg => {
             return;
         } else if(msg.channel.id == config.syncChannel) {
             
+			let member = msg.guild.member(msg.author);
+			
+			if(member == null) {
+				msg.reply("Etwas ist schiefgelaufen :(");
+				return;
+			}
+			
             //if not .verify
-            if(!msg.member.roles.find(r => r.name === "verified")) {
+            if(!member.roles.find(r => r.name === "verified")) {
                 msg.reply("Du musst dich zuerst verifizieren!");
                 return;
             }
@@ -135,9 +142,9 @@ bot.on('message', msg => {
             //get username
             let username;
             try {
-                username = msg.member.roles.find(r => r.color === 37887).name;
+                username = member.roles.find(r => r.color === 37887).name;
             }catch(e) {
-                console.log("Der user " + msg.member.nickname + " hat keine Rolle mit seinem Namen?!");
+                console.log("Der user " + member.nickname + " hat keine Rolle mit seinem Namen?!");
                 return;
             }
             //get message
@@ -150,7 +157,7 @@ bot.on('message', msg => {
                 return;
             }
 
-            console.log(username + ": " + text);
+            //console.log(username + ": " + text);
             
             // create webhook
             getUUID(username)
@@ -165,7 +172,7 @@ bot.on('message', msg => {
                 method: "POST",
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    username: msg.member.roles.find(r => r.color === 37887).name,
+                    username: username,
                     text: text.replace(/"/g, "&%'")
                 })
             }).catch(err => console.log("Der API Server ist nicht erreichbar"));

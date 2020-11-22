@@ -32,7 +32,7 @@ let auth = {};
 
 //post method verifying get 
 app.post('/authget', function(req, res){
-    res.send("{ \"name\": \"" + auth[req.body.token] + "\"}");
+    res.send(JSON.stringify({name: auth[req.body.token]}));
     delete auth[req.body.token];
 });
 
@@ -79,7 +79,7 @@ app.post('/start', function(req, res) {
 //bot going offline
 app.post('/stop', function(req, res){
     chat = []
-    chat.push("{ \"stop\": \"bot offline\"}")
+    chat.push(JSON.stringify({stop: "bot offline"}))
     res.end();
 });
 
