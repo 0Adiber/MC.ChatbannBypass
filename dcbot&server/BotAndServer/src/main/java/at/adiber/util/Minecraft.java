@@ -12,6 +12,7 @@ import java.net.URLConnection;
 public class Minecraft {
 
     private static final String UURL = "https://mc-heads.net/minecraft/profile/";
+    public static final String AVATAR = "https://mc-heads.net/avatar/";
     private static ObjectMapper mapper = new ObjectMapper();
 
     public static String getUUID(String username) throws IOException {

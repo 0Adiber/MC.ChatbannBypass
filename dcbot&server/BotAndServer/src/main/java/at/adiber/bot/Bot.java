@@ -1,20 +1,32 @@
 package at.adiber.bot;
 
+import at.adiber.api.chat.Chat;
+import at.adiber.api.chat.Message;
 import at.adiber.bot.listener.MessageListener;
 import at.adiber.bot.listener.ReadyListener;
 import at.adiber.config.BotConfig;
+import at.adiber.util.Minecraft;
+import club.minnced.discord.webhook.WebhookClient;
+import club.minnced.discord.webhook.WebhookClientBuilder;
 import lombok.Data;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.entities.Activity;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 
+import javax.imageio.ImageIO;
 import javax.security.auth.login.LoginException;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Base64;
+import java.util.concurrent.TimeUnit;
 
 @Data
 public final class Bot {
@@ -92,6 +104,29 @@ public final class Bot {
         return new EmbedBuilder().setColor(config.getColor())
                 .setDescription("*FEHLER*")
                 .addField("Ursache", "Du bist noch nicht verifiziert!", true).build();
+    }
+
+    public void incoming() {
+        Message msg = Chat.clan.pop();
+
+        try {
+            URL url = new URL(Minecraft.AVATAR + msg.getSender());
+
+            Icon icon = Icon.from(url.openStream());
+
+            api.getGuildById(config.getGuildId()).getTextChannelById(config.getSyncChannel()).createWebhook(msg.getSender()).setName(msg.getSender()).setAvatar(icon).queue(h -> {
+
+                try (WebhookClient client = WebhookClient.withUrl(h.getUrl())) {
+                    client.send(msg.getMsg()).thenRunAsync(() -> h.delete().queue());
+                }
+            });
+
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
 }

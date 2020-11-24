@@ -13,20 +13,23 @@ import jdk.nashorn.internal.parser.Token;
 import org.springframework.web.bind.annotation.*;
 import at.adiber.api.beans.MessageType;
 
+import java.util.EmptyStackException;
+
 @RestController
 public class ApiController {
 
     private static ObjectMapper mapper = new ObjectMapper();
 
     @PostMapping("message/{type}")
-    Result message(@PathVariable String type, @RequestBody JsonNode payload) {
+    Result message(@PathVariable String type, @RequestBody Message msg) {
         try {
-            MessageType mt = MessageType.valueOf(type);
-            Message msg = mapper.treeToValue(payload, Message.class);
+            MessageType mt = MessageType.valueOf(type.toUpperCase());
+            //Message msg = mapper.treeToValue(payload, Message.class);
 
             switch (mt) {
                 case MC:
                         Chat.clan.push(msg);
+                        Main.bot.incoming();
                     break;
                 case DC:
                         Chat.discord.push(msg);
@@ -39,15 +42,15 @@ public class ApiController {
 
         } catch(IllegalArgumentException e) {
             throw new IllegalArgumentException(String.format("No such MessageType (%s)", type));
-        } catch (JsonProcessingException e) {
-            throw new NullPointerException("Cannot read payload as Message Object");
+        //} catch (JsonProcessingException e) {
+        //    throw new NullPointerException("Cannot read payload as Message Object");
         }
     }
 
     @GetMapping("message/{type}")
     Message message(@PathVariable String type) {
         try {
-            MessageType mt = MessageType.valueOf(type);
+            MessageType mt = MessageType.valueOf(type.toUpperCase());
 
             switch (mt) {
                 case MC:
@@ -60,6 +63,8 @@ public class ApiController {
 
         } catch(IllegalArgumentException e) {
             throw new IllegalArgumentException(String.format("No such MessageType (%s)", type));
+        } catch(EmptyStackException e) {
+            return null;
         }
     }
 
