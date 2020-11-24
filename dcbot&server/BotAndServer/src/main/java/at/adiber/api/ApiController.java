@@ -70,13 +70,17 @@ public class ApiController {
         try {
             Verification ver = mapper.treeToValue(payload, Verification.class);
 
+            if(Main.bot.isUsernameVerified(ver.getUsername())) {
+                throw new IllegalArgumentException(String.format("Username '%s' is already verified!", ver.getUsername()));
+            }
+
             if(TokenGenerator.tokens.containsKey(ver.getToken())) {
                 Long userid = TokenGenerator.tokens.get(ver.getToken());
                 TokenGenerator.tokens.remove(ver.getToken());
                 Main.bot.complete(userid, ver.getUsername());
                 return new Result("verify", "success");
             }
-            throw new IllegalArgumentException(String.format("Token '%s' does not exist", ver.getToken()));
+            throw new IllegalArgumentException(String.format("Token '%s' does not exist!", ver.getToken()));
         } catch (JsonProcessingException e) {
             throw new NullPointerException("Cannot read payload as Verification Object");
         }
