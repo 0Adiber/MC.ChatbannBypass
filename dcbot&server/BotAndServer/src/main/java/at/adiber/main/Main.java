@@ -2,6 +2,8 @@ package at.adiber.main;
 
 import at.adiber.api.Api;
 import at.adiber.bot.Bot;
+import at.adiber.token.Verification;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import at.adiber.config.BotConfig;
 import org.springframework.boot.SpringApplication;

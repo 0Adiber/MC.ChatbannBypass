@@ -10,6 +10,9 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.ChunkingFilter;
+import net.dv8tion.jda.api.utils.MemberCachePolicy;
 
 import javax.security.auth.login.LoginException;
 
@@ -24,6 +27,9 @@ public final class Bot {
     public Bot(BotConfig config) {
         this.config = config;
         builder = JDABuilder.createDefault(config.getToken())
+                            .setChunkingFilter(ChunkingFilter.ALL)
+                            .setMemberCachePolicy(MemberCachePolicy.ALL)
+                            .enableIntents(GatewayIntent.GUILD_MEMBERS)
                             .addEventListeners(new ReadyListener(), new MessageListener())
                             .setAutoReconnect(true);
 

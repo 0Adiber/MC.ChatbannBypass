@@ -10,15 +10,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jdk.nashorn.internal.parser.Token;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 import at.adiber.api.beans.MessageType;
-import org.springframework.web.bind.annotation.RequestBody;
 
+@RestController
 public class ApiController {
 
-    private static ObjectMapper mapper;
+    private static ObjectMapper mapper = new ObjectMapper();
 
     @PostMapping("message/{type}")
     Result message(@PathVariable String type, @RequestBody JsonNode payload) {
@@ -66,10 +64,7 @@ public class ApiController {
     }
 
     @PostMapping("verify")
-    Result verify(@RequestBody JsonNode payload) {
-        try {
-            Verification ver = mapper.treeToValue(payload, Verification.class);
-
+    Result verify(@RequestBody Verification ver) {
             if(Main.bot.isUsernameVerified(ver.getUsername())) {
                 throw new IllegalArgumentException(String.format("Username '%s' is already verified!", ver.getUsername()));
             }
@@ -81,8 +76,5 @@ public class ApiController {
                 return new Result("verify", "success");
             }
             throw new IllegalArgumentException(String.format("Token '%s' does not exist!", ver.getToken()));
-        } catch (JsonProcessingException e) {
-            throw new NullPointerException("Cannot read payload as Verification Object");
-        }
     }
 }
