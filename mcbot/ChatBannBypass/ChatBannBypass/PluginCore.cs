@@ -17,7 +17,7 @@ namespace ChatBannBypass
         public override void OnLoad(int version, int subversion, int buildversion)
         {
             // Should be used to define all the settings.
-            this.Setting.Add(new StringSetting("Server", "The Server for the Communication", "localhost:61000"));
+            this.Setting.Add(new StringSetting("Server", "The Server for the Communication", "http://localhost:61000"));
             this.Setting.Add(new StringSetting("No Synchronise", "Not synchronised with DC Server", "MeineTochter"));
         }
 

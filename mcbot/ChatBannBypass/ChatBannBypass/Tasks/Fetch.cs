@@ -79,7 +79,16 @@ namespace ChatBannBypass.Tasks
                         streamWriter.Write(js.Serialize(obj));
                     }
 
-                    var res = (HttpWebResponse)req.GetResponse();
+                    HttpWebResponse res;
+                    try
+                    {
+                        res = (HttpWebResponse)req.GetResponse();
+                    }
+                    catch (Exception)
+                    {
+                        Console.WriteLine("Server cannot be reached!");
+                        return;
+                    }
                     res.Close();
                     return;
                 }
@@ -100,10 +109,22 @@ namespace ChatBannBypass.Tasks
                     streamWriter.Write(js.Serialize(obj));
                 }
 
-                var response = (HttpWebResponse)request.GetResponse();
-                if(response.StatusCode == HttpStatusCode.BadRequest)
+                HttpWebResponse response;
+                try
+                {
+                    response = (HttpWebResponse)request.GetResponse();
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine("Server cannot be reached!");
+                    return;
+                }
+
+                if (response.StatusCode == HttpStatusCode.BadRequest)
                 {
                     var err = js.Deserialize<Beans.Error>(new StreamReader(response.GetResponseStream()).ReadToEnd());
+                    if (err == null)
+                        return;
                     context.Functions.Chat("/cc " + err.message);
                 }
                 response.Close();
@@ -125,6 +146,7 @@ namespace ChatBannBypass.Tasks
             }
             catch (Exception)
             {
+                Console.WriteLine("Server cannot be reached!");
                 return;
             }
             string responseFromServer = "";
@@ -137,6 +159,11 @@ namespace ChatBannBypass.Tasks
             response.Close();
 
             var msg = js.Deserialize<Beans.Message>(responseFromServer);
+
+            if(msg == null)
+            {
+                return;
+            }
 
             string username = msg.sender;
             string text = msg.msg;
