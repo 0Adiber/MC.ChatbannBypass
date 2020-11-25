@@ -103,7 +103,8 @@ namespace ChatBannBypass.Tasks
                 var response = (HttpWebResponse)request.GetResponse();
                 if(response.StatusCode == HttpStatusCode.BadRequest)
                 {
-                    context.Functions.Chat("/cc Der Token '" + token + "' existiert nicht!");
+                    var err = js.Deserialize<Beans.Error>(new StreamReader(response.GetResponseStream()).ReadToEnd());
+                    context.Functions.Chat("/cc " + err.message);
                 }
                 response.Close();
             }

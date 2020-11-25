@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Beans\Error.cs" />
     <Compile Include="Beans\Message.cs" />
     <Compile Include="Beans\Verify.cs" />
     <Compile Include="PluginCore.cs" />
