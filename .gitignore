@@ -2,6 +2,7 @@ node_modules/
 
 bin/
 obj/
+out/
 
 .vs/
 dcbot&server/BotAndServer/config.json

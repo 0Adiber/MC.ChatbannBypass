@@ -1,0 +1,7 @@
+{
+    "token": "<BOT-TOKEN>",
+    "syncChannel": "<Channel-ID>",
+    "prefix": "",
+    "color": 2142679,
+    "guildId": "<Guild-ID>"
+}
