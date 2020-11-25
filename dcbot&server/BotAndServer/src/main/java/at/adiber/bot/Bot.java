@@ -107,8 +107,10 @@ public final class Bot {
     }
 
     public void incoming() {
-        Message msg = Chat.clan.pop();
+        incoming(Chat.clan.pop());
+    }
 
+    public void incoming(Message msg) {
         try {
             URL url = new URL(Minecraft.AVATAR + msg.getSender());
 

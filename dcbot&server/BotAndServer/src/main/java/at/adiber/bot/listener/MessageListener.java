@@ -49,9 +49,11 @@ public class MessageListener extends ListenerAdapter {
         if(event.getChannel().getId().equalsIgnoreCase(Main.bot.getConfig().getSyncChannel())) {
            if(!event.getMember().getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase("verified")))
                return;
-
+           event.getMessage().delete().queue();
            String username = event.getMember().getRoles().stream().filter(r -> r.getColorRaw() == Bot.USERNAMECOLOR).findFirst().get().getName();
-           Chat.discord.push(new Message(username, msg));
+           Message send = new Message(username, msg);
+           Chat.discord.push(send);
+           Main.bot.incoming(send);
         }
 
     }
