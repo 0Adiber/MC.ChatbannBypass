@@ -18,5 +18,10 @@ namespace ChatBannBypass.Beans
             this.timestamp = timestamp;
             this.message = message;
         }
+
+        public Error()
+        {
+
+        }
     }
 }

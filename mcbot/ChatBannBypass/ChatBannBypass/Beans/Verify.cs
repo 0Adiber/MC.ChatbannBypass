@@ -16,5 +16,10 @@ namespace ChatBannBypass.Beans
             this.username = username;
             this.token = token;
         }
+
+        public Verify()
+        {
+
+        }
     }
 }

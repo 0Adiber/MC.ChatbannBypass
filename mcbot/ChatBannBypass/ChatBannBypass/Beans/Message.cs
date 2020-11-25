@@ -16,5 +16,10 @@ namespace ChatBannBypass.Beans
             this.sender = sender;
             this.msg = msg;
         }
+
+        public Message()
+        {
+
+        }
     }
 }
