@@ -9,11 +9,14 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web.Script.Serialization;
 
 namespace ChatBannBypass.Tasks
 {
     class Fetch : ITask
     {
+        private static JavaScriptSerializer js;
+        #region PluginStandard
         private readonly string server;
         private readonly string[] not_sync;
 
@@ -21,42 +24,29 @@ namespace ChatBannBypass.Tasks
         {
             this.server = server.Contains("http://")?server:"http://"+server;
             this.not_sync = not_sync;
+            js = new JavaScriptSerializer();
         }
 
         public override bool Exec()
         {
             return true;
         }
-        public override void Start() { player.events.onChat += OnChat; player.events.onTick += OnTick; StartUp(); }
-        public override void Stop() { player.events.onChat -= OnChat; player.events.onTick -= OnTick; StopCon(); }
 
-        private void StartUp()
+        public override async Task Start()
         {
-            var request = (HttpWebRequest)WebRequest.Create(server + "/start");
-            request.Method = "POST";
-            request.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36";
-            request.ContentType = "application/json";
-            request.Credentials = CredentialCache.DefaultCredentials;
-            ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
-
-            var response = (HttpWebResponse)request.GetResponse();
-            response.Close();
+            Context.Events.onChat += OnChat;
+            Context.Events.onTick += OnTick;
+        } 
+        
+        public override async Task Stop()
+        {
+            Context.Events.onChat -= OnChat;
+            Context.Events.onTick -= OnTick;
         }
 
-        private void StopCon()
-        {
-            var request = (HttpWebRequest)WebRequest.Create(server + "/stop");
-            request.Method = "POST";
-            request.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36";
-            request.ContentType = "application/json";
-            request.Credentials = CredentialCache.DefaultCredentials;
-            ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
+        #endregion
 
-            var response = (HttpWebResponse)request.GetResponse();
-            response.Close();
-        }
-
-        private void OnChat(IPlayer player, IChat message, byte position)
+        private void OnChat(IBotContext context, IChat message, byte position)
         {
             string msg = message.GetText();
             if (msg.StartsWith("[Clans]"))
@@ -75,19 +65,18 @@ namespace ChatBannBypass.Tasks
 
                     string text = parts[1].Replace("\"", "&%'");
 
-                    var req = (HttpWebRequest)WebRequest.Create(server + "/chat");
+                    var req = (HttpWebRequest)WebRequest.Create(server + "/message/MC");
                     req.Method = "POST";
-                    req.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36";
+                    req.UserAgent = "ChatBannBypass Bot";
                     req.ContentType = "application/json";
                     req.Credentials = CredentialCache.DefaultCredentials;
                     ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
 
                     using (var streamWriter = new StreamWriter(req.GetRequestStream()))
                     {
-                        string json = "{\"username\":\"" + username + "\"," +
-                                      "\"text\":\"" + text + "\"}";
+                        var obj = new Beans.Message(username, text);
 
-                        streamWriter.Write(json);
+                        streamWriter.Write(js.Serialize(obj));
                     }
 
                     var res = (HttpWebResponse)req.GetResponse();
@@ -95,34 +84,36 @@ namespace ChatBannBypass.Tasks
                     return;
                 }
 
-                string token = RandomString(11, false);
+                //parts[1] = ".auth <Token>"
+                string token = parts[1].Split(new char[] { ' ' })[1].Trim();
 
-                var request = (HttpWebRequest)WebRequest.Create(server + "/auth");
+                var request = (HttpWebRequest)WebRequest.Create(server + "/verify");
                 request.Method = "POST";
-                request.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36";
+                request.UserAgent = "ChatBannBypass Bot";
                 request.ContentType = "application/json";
                 request.Credentials = CredentialCache.DefaultCredentials;
                 ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
 
                 using (var streamWriter = new StreamWriter(request.GetRequestStream()))
                 {
-                    string json = "{\"token\":\""+ token + "\"," +
-                                  "\"username\":\""+ parts[0].Trim() +"\"}";
-
-                    streamWriter.Write(json);
+                    var obj = new Beans.Verify(parts[0].Trim(), token);
+                    streamWriter.Write(js.Serialize(obj));
                 }
 
                 var response = (HttpWebResponse)request.GetResponse();
+                if(response.StatusCode == HttpStatusCode.BadRequest)
+                {
+                    context.Functions.Chat("/cc Der Token '" + token + "' existiert nicht!");
+                }
                 response.Close();
-                player.functions.Chat("/cc " + parts[0].Trim() + " Dein Token ist: " + token);
             }
         }
 
-        private void OnTick(IPlayer player)
+        private void OnTick(IBotContext context)
         {
-            var request = (HttpWebRequest)WebRequest.Create(server);
+            var request = (HttpWebRequest)WebRequest.Create(server + "/message/DC");
             request.Method = "GET";
-            request.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36";
+            request.UserAgent = "ChatBannBypass Bot";
             request.Credentials = CredentialCache.DefaultCredentials;
             ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
 
@@ -144,33 +135,15 @@ namespace ChatBannBypass.Tasks
 
             response.Close();
 
-            responseFromServer = responseFromServer.TrimEnd('}').TrimStart('{');
+            var msg = js.Deserialize<Beans.Message>(responseFromServer);
 
-            string[] parts = responseFromServer.Split(new char[] { ',' }, 2);
-
-            string username = parts[0].Split(new char[] { ':' }, 2)[1];
-            string text = parts[1].Split(new char[] { ':' }, 2)[1];
+            string username = msg.sender;
+            string text = msg.msg;
 
             username = username.Trim('"');
             text = text.Trim('"').Replace("&%'", "\"");
 
-
-            player.functions.Chat("/cc " + username + ": " + text);
-        }
-
-        public string RandomString(int size, bool lowerCase)
-        {
-            StringBuilder builder = new StringBuilder();
-            Random random = new Random();
-            char ch;
-            for (int i = 0; i < size; i++)
-            {
-                ch = Convert.ToChar(Convert.ToInt32(Math.Floor(26 * random.NextDouble() + 65)));
-                builder.Append(ch);
-            }
-            if (lowerCase)
-                return builder.ToString().ToLower();
-            return builder.ToString();
+            context.Functions.Chat("/cc " + username + ": " + text);
         }
 
     }

@@ -31,8 +31,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="OQ.MineBot.PluginBase">
-      <HintPath>..\..\..\..\gommereportbots\OQ.Plugins\OQ.MineBot.PluginBase.dll</HintPath>
+    <Reference Include="OQ.MineBot.PluginBase, Version=1.2.94.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OQ.MineBot.PluginBase.1.2.102\lib\net452\OQ.MineBot.PluginBase.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -47,6 +47,12 @@
     <Compile Include="PluginCore.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tasks\Fetch.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="icon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
