@@ -39,9 +39,9 @@ public class MessageListener extends ListenerAdapter {
                 event.getChannel().sendMessage(Main.bot.tokenEmbed(token)).queue();
             } else if(args[0].equalsIgnoreCase("invalidate")) {
                 if(Main.bot.isUserVerified(event.getAuthor().getIdLong())) {
-                    event.getChannel().sendMessage(Main.bot.invalidate(event.getAuthor().getIdLong()));
+                    event.getChannel().sendMessage(Main.bot.invalidate(event.getAuthor().getIdLong())).queue();
                 } else {
-                    event.getChannel().sendMessage(Main.bot.notVerified());
+                    event.getChannel().sendMessage(Main.bot.notVerified()).queue();
                 }
             }
         }

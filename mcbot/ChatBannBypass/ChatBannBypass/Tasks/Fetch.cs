@@ -54,16 +54,16 @@ namespace ChatBannBypass.Tasks
                 if (!msg.Contains(":")) return;
                 msg = msg.Replace("[Clans]", "");
                 string[] parts = msg.Trim().Split(new char[] { ':' }, 2);
-                if (!parts[1].Trim().Equals(".auth"))
-                {
-                    string username = parts[0].Trim();
+                string username = parts[0].Trim();
 
+                if (!parts[1].Trim().StartsWith(".auth"))
+                {
                     if (not_sync.Contains(username))
                     {
                         return;
                     }
 
-                    string text = parts[1].Replace("\"", "&%'");
+                    string text = parts[1];
 
                     var req = (HttpWebRequest)WebRequest.Create(server + "/message/MC");
                     req.Method = "POST";
@@ -94,6 +94,11 @@ namespace ChatBannBypass.Tasks
                 }
 
                 //parts[1] = ".auth <Token>"
+                if(parts[1].Split(new char[] {  ' ' }).Length < 2)
+                {
+                    context.Functions.Chat("/cc Ungültiger Befehl! - (.auth <token>)");
+                    return;
+                }
                 string token = parts[1].Split(new char[] { ' ' })[1].Trim();
 
                 var request = (HttpWebRequest)WebRequest.Create(server + "/verify");
@@ -105,7 +110,7 @@ namespace ChatBannBypass.Tasks
 
                 using (var streamWriter = new StreamWriter(request.GetRequestStream()))
                 {
-                    var obj = new Beans.Verify(parts[0].Trim(), token);
+                    var obj = new Beans.Verify(username, token);
                     streamWriter.Write(js.Serialize(obj));
                 }
 
@@ -114,18 +119,17 @@ namespace ChatBannBypass.Tasks
                 {
                     response = (HttpWebResponse)request.GetResponse();
                 }
-                catch (Exception)
+                catch (WebException e)
                 {
-                    Console.WriteLine("Server cannot be reached!");
-                    return;
-                }
-
-                if (response.StatusCode == HttpStatusCode.BadRequest)
-                {
-                    var err = js.Deserialize<Beans.Error>(new StreamReader(response.GetResponseStream()).ReadToEnd());
-                    if (err == null)
-                        return;
-                    context.Functions.Chat("/cc " + err.message);
+                    response = (HttpWebResponse)e.Response;
+                    if (response != null && response.StatusCode == HttpStatusCode.BadRequest)
+                    {
+                        var err = js.Deserialize<Beans.Error>(new StreamReader(response.GetResponseStream()).ReadToEnd());
+                        if (err == null)
+                            return;
+                        context.Functions.Chat("/cc " + err.message);
+                    }
+                    response.Close();
                 }
                 response.Close();
             }

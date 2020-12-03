@@ -74,7 +74,8 @@ public final class Bot {
     public MessageEmbed invalidate(Long userId) {
         Guild guild = api.getGuildById(config.getGuildId());
         guild.removeRoleFromMember(userId, guild.getRolesByName("verified", true).get(0)).queue();
-        guild.removeRoleFromMember(userId, guild.getMemberById(userId).getRoles().stream().filter(r -> r.getColorRaw() == USERNAMECOLOR).findFirst().get()).queue();
+        Role role = guild.getMemberById(userId).getRoles().stream().filter(r -> r.getColorRaw() == USERNAMECOLOR).findFirst().get();
+        role.delete().queue();
         return new EmbedBuilder().setColor(config.getColor())
                 .setDescription("**FERTIG**")
                 .addField("", "Deine Verifizierung wurde aufgehoben", true).build();
