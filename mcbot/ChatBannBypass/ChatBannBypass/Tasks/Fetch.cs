@@ -56,7 +56,9 @@ namespace ChatBannBypass.Tasks
                 string[] parts = msg.Trim().Split(new char[] { ':' }, 2);
                 string username = parts[0].Trim();
 
-                if (!parts[1].Trim().StartsWith(".auth"))
+                parts[1] = parts[1].Trim();
+
+                if (!parts[1].StartsWith(".auth"))
                 {
                     if (not_sync.Contains(username))
                     {
@@ -94,7 +96,7 @@ namespace ChatBannBypass.Tasks
                 }
 
                 //parts[1] = ".auth <Token>"
-                if(parts[1].Split(new char[] {  ' ' }).Length < 2)
+                if(parts[1].Split(new char[] { ' ' }).Length < 2)
                 {
                     context.Functions.Chat("/cc Ungültiger Befehl! - (.auth <token>)");
                     return;
