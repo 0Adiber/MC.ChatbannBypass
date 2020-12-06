@@ -117,15 +117,35 @@ public final class Bot {
 
             Icon icon = Icon.from(url.openStream());
 
+            Guild guild = api.getGuildById(config.getGuildId());
+            TextChannel chan = guild.getTextChannelById(config.getSyncChannel());
+
+            chan.retrieveWebhooks().queue(webhooks -> {
+                if(webhooks.size() > 0) {
+                    Webhook hook = webhooks.get(0);
+                    hook.getManager().setName(msg.getSender()).setAvatar(icon).queue(aVoid -> {
+                        try(WebhookClient client = WebhookClient.withUrl(hook.getUrl())) {
+                            client.send(msg.getMsg());
+                        }
+                    });
+                } else {
+                    chan.createWebhook(msg.getSender()).setName(msg.getSender()).setAvatar(icon).queue(h -> {
+
+                        try (WebhookClient client = WebhookClient.withUrl(h.getUrl())) {
+                            client.send(msg.getMsg());
+                        }
+                    });
+                }
+            });
+
+            /*
             api.getGuildById(config.getGuildId()).getTextChannelById(config.getSyncChannel()).createWebhook(msg.getSender()).setName(msg.getSender()).setAvatar(icon).queue(h -> {
 
                 try (WebhookClient client = WebhookClient.withUrl(h.getUrl())) {
                     client.send(msg.getMsg()).thenRunAsync(() -> h.delete().queue());
                 }
-            });
+            });*/
 
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
