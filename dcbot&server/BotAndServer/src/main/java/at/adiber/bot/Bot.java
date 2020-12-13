@@ -115,11 +115,14 @@ public final class Bot {
         try {
             URL url = new URL(Minecraft.AVATAR + msg.getSender());
 
-            Icon icon = Icon.from(url.openStream());
+            //Icon icon = Icon.from(url.openStream());
 
             Guild guild = api.getGuildById(config.getGuildId());
             TextChannel chan = guild.getTextChannelById(config.getSyncChannel());
 
+            chan.sendMessage(new EmbedBuilder().setColor(config.getColor()).setDescription(msg.getMsg()).setAuthor(msg.getSender(), null, url.toString()).build()).queue();
+
+            /*
             chan.retrieveWebhooks().queue(webhooks -> {
                 if(webhooks.size() > 0) {
                     Webhook hook = webhooks.get(0);
@@ -136,7 +139,7 @@ public final class Bot {
                         }
                     });
                 }
-            });
+            });*/
 
             /*
             api.getGuildById(config.getGuildId()).getTextChannelById(config.getSyncChannel()).createWebhook(msg.getSender()).setName(msg.getSender()).setAvatar(icon).queue(h -> {
